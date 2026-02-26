@@ -1,0 +1,8 @@
+{
+  "records": [],
+  "metadata": {
+    "createdAt": null,
+    "updatedAt": null,
+    "description": "Temporary store for bulk upload records (see BulkUploadRecord model). Replace nulls with ISO 8601 dates when writing."
+  }
+}
