@@ -1,12 +1,14 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { Mutex } from 'async-mutex';
 import { BulkUploadRecord } from '../models/bulk-upload-record.model';
 import { DatabaseSchema } from './interfaces/database-schema.interface';
 
 @Injectable()
 export class DatabaseService implements OnModuleInit {
   private readonly logger = new Logger(DatabaseService.name);
+  private readonly mutex = new Mutex();
   private readonly dbPath = path.join(
     process.cwd(),
     'data',
@@ -39,13 +41,15 @@ export class DatabaseService implements OnModuleInit {
   async bulkInsert(
     records: BulkUploadRecord[],
   ): Promise<{ inserted: number; total: number }> {
-    const db = await this.read();
-    db.records.push(...records);
-    await this.write(db);
-    this.logger.log(
-      `Bulk inserted ${records.length} records. Total: ${db.records.length}`,
-    );
-    return { inserted: records.length, total: db.records.length };
+    return this.mutex.runExclusive(async () => {
+      const db = await this.read();
+      db.records.push(...records);
+      await this.write(db);
+      this.logger.log(
+        `Bulk inserted ${records.length} records. Total: ${db.records.length}`,
+      );
+      return { inserted: records.length, total: db.records.length };
+    });
   }
 
   async getAllRecords(): Promise<BulkUploadRecord[]> {
@@ -59,15 +63,17 @@ export class DatabaseService implements OnModuleInit {
   }
 
   async resetDatabase(): Promise<void> {
-    const emptyDb: DatabaseSchema = {
-      records: [],
-      metadata: {
-        createdAt: null,
-        updatedAt: null,
-        description: 'Temporary store for bulk upload records',
-      },
-    };
-    await this.write(emptyDb);
-    this.logger.log('Database reset');
+    return this.mutex.runExclusive(async () => {
+      const emptyDb: DatabaseSchema = {
+        records: [],
+        metadata: {
+          createdAt: null,
+          updatedAt: null,
+          description: 'Temporary store for bulk upload records',
+        },
+      };
+      await this.write(emptyDb);
+      this.logger.log('Database reset');
+    });
   }
 }
