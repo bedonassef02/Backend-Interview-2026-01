@@ -2,13 +2,13 @@ import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { BulkUploadRecord } from '../models/bulk-upload-record.model';
 import { UploadResponseDto } from './dto/upload-response.dto';
-import * as csvParserImport from 'csv-parser';
-const csvParser = (csvParserImport as any).default || csvParserImport;
+import csvParser from 'csv-parser';
 import { v4 as uuidv4 } from 'uuid';
 import { Readable } from 'stream';
 
 @Injectable()
 export class BulkUploadService {
+  private static readonly MAX_RECORDS = 10_000;
   private readonly logger = new Logger(BulkUploadService.name);
 
   constructor(private readonly databaseService: DatabaseService) {}
@@ -33,7 +33,7 @@ export class BulkUploadService {
         stream.push(fileBuffer);
         stream.push(null); // End of stream
 
-        const MAX_RECORDS = 10000;
+        const MAX_RECORDS = BulkUploadService.MAX_RECORDS;
 
         stream
           .pipe(csvParser())
@@ -114,13 +114,13 @@ export class BulkUploadService {
       const trimKey = key.trim();
       const trimVal = value?.trim();
 
-      if (!trimVal || trimVal === '') {
+      if (!trimVal) {
         normalized[trimKey] = null;
       } else if (trimVal.toLowerCase() === 'true') {
         normalized[trimKey] = true;
       } else if (trimVal.toLowerCase() === 'false') {
         normalized[trimKey] = false;
-      } else if (!isNaN(Number(trimVal)) && trimVal !== '') {
+      } else if (!isNaN(Number(trimVal))) {
         normalized[trimKey] = Number(trimVal);
       } else {
         normalized[trimKey] = trimVal;
