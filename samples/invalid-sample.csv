@@ -1,0 +1,4 @@
+name,email,age,active
+,,,
+Valid Row,valid@test.com,30,true
+Another Empty,,,

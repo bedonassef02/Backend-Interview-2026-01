@@ -13,7 +13,7 @@
 |---|---|
 | CSV bulk upload to JSON "database" | ✅ |
 | Authentication / abuse prevention | ✅ |
-| Small interface (UI) for running the service | ⬜ |
+| Small interface (UI) for running the service | ✅ |
 | Track exact time taken | ⬜ |
 | **Bonus:** Service documentation | ⬜ |
 | **Bonus:** Tests | ⬜ |
@@ -1220,12 +1220,12 @@ graph TD
 - [x] CSV parsing handles edge cases (empty rows, missing fields)
 - [x] File size validation working
 - [x] File type validation working
-- [ ] Frontend login form working
-- [ ] Frontend file upload working (drag & drop + click)
-- [ ] Frontend shows upload results
-- [ ] Frontend shows records table
-- [ ] Frontend reset database button working
-- [ ] Sample CSV files created
+- [x] Frontend login form working
+- [x] Frontend file upload working (drag & drop + click)
+- [x] Frontend shows upload results
+- [x] Frontend shows records table
+- [x] Frontend reset database button working
+- [x] Sample CSV files created
 - [ ] Unit tests passing
 - [ ] E2E tests passing
 - [ ] Swagger docs accessible

@@ -1,0 +1,6 @@
+name,email,age,active
+John Doe,john@example.com,30,true
+Jane Smith,jane@example.com,25,true
+Bob Johnson,bob@example.com,45,false
+Alice Brown,alice@example.com,28,true
+Charlie Wilson,charlie@example.com,35,true
