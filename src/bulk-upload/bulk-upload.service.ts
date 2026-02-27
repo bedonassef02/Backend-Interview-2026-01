@@ -29,11 +29,17 @@ export class BulkUploadService {
 
     try {
       await new Promise<void>((resolve, reject) => {
-        const stream = Readable.from(fileBuffer.toString('utf-8'));
+        const stream = new Readable();
+        stream.push(fileBuffer);
+        stream.push(null); // End of stream
+
+        const MAX_RECORDS = 10000;
 
         stream
           .pipe(csvParser())
           .on('data', (row: Record<string, string>) => {
+            if (records.length >= MAX_RECORDS) return; // Stop pushing after limit
+
             rowIndex++;
             try {
               // Skip empty rows
@@ -52,6 +58,12 @@ export class BulkUploadService {
                 createdAt: new Date().toISOString(),
               };
               records.push(record);
+
+              if (records.length === MAX_RECORDS) {
+                errors.push(
+                  `Warning: Upload truncated. Maximum limit of ${MAX_RECORDS} records reached.`,
+                );
+              }
             } catch (err: any) {
               errors.push(`Row ${rowIndex}: ${err.message}`);
             }
