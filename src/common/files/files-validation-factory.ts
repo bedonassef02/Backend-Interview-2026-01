@@ -26,6 +26,8 @@ const createFileValidators = (
     }),
     new FileTypeValidator({
       fileType: fileTypeRegex,
+      fallbackToMimetype: true,
+      skipMagicNumbersValidation: true,
     }),
     new FileSignatureValidator(),
   ];
