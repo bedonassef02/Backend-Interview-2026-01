@@ -11,8 +11,8 @@
 
 | Requirement | Status |
 |---|---|
-| CSV bulk upload to JSON "database" | ⬜ |
-| Authentication / abuse prevention | ⬜ |
+| CSV bulk upload to JSON "database" | ✅ |
+| Authentication / abuse prevention | ✅ |
 | Small interface (UI) for running the service | ⬜ |
 | Track exact time taken | ⬜ |
 | **Bonus:** Service documentation | ⬜ |
@@ -1206,20 +1206,20 @@ graph TD
 
 ## ✅ Completion Checklist
 
-- [ ] NestJS project initialized with all dependencies
-- [ ] TypeScript configured correctly
-- [ ] Environment variables set up
-- [ ] Global exception filter working
-- [ ] Request logging working
-- [ ] Database service reads/writes JSON file
-- [ ] JWT authentication working
-- [ ] API Key authentication working
-- [ ] Rate limiting working (test with rapid requests)
-- [ ] CSV upload endpoint working
-- [ ] CSV parsing handles valid files
-- [ ] CSV parsing handles edge cases (empty rows, missing fields)
-- [ ] File size validation working
-- [ ] File type validation working
+- [x] NestJS project initialized with all dependencies
+- [x] TypeScript configured correctly
+- [x] Environment variables set up
+- [x] Global exception filter working
+- [x] Request logging working
+- [x] Database service reads/writes JSON file
+- [x] JWT authentication working
+- [x] API Key authentication working
+- [x] Rate limiting working (test with rapid requests)
+- [x] CSV upload endpoint working
+- [x] CSV parsing handles valid files
+- [x] CSV parsing handles edge cases (empty rows, missing fields)
+- [x] File size validation working
+- [x] File type validation working
 - [ ] Frontend login form working
 - [ ] Frontend file upload working (drag & drop + click)
 - [ ] Frontend shows upload results
