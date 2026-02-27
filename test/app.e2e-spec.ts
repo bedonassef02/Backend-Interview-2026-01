@@ -191,7 +191,10 @@ describe('Bulk Upload Service — End-to-End', () => {
     it('should return 401 when no JWT is provided', async () => {
       await request(app.getHttpServer())
         .post('/api/bulk-upload/upload')
-        .attach('file', validCsvBuffer, { filename: 'test.csv', contentType: 'text/csv' })
+        .attach('file', validCsvBuffer, {
+          filename: 'test.csv',
+          contentType: 'text/csv',
+        })
         .expect(401);
     });
 
@@ -201,7 +204,10 @@ describe('Bulk Upload Service — End-to-End', () => {
       const res = await request(app.getHttpServer())
         .post('/api/bulk-upload/upload')
         .set('Authorization', `Bearer ${token}`)
-        .attach('file', validCsvBuffer, { filename: 'test.csv', contentType: 'text/csv' })
+        .attach('file', validCsvBuffer, {
+          filename: 'test.csv',
+          contentType: 'text/csv',
+        })
         .expect(201);
 
       expect(res.body.success).toBe(true);
@@ -212,10 +218,7 @@ describe('Bulk Upload Service — End-to-End', () => {
 
     it('should return the correct recordsInserted count', async () => {
       const token = await getAuthToken(app);
-      const csv = Buffer.from(
-        'name,score\nA,1\nB,2\nC,3\nD,4\nE,5',
-        'utf-8',
-      );
+      const csv = Buffer.from('name,score\nA,1\nB,2\nC,3\nD,4\nE,5', 'utf-8');
 
       const res = await request(app.getHttpServer())
         .post('/api/bulk-upload/upload')
@@ -272,7 +275,10 @@ describe('Bulk Upload Service — End-to-End', () => {
       await request(app.getHttpServer())
         .post('/api/bulk-upload/upload')
         .set('Authorization', `Bearer ${token}`)
-        .attach('file', headerOnly, { filename: 'empty.csv', contentType: 'text/csv' })
+        .attach('file', headerOnly, {
+          filename: 'empty.csv',
+          contentType: 'text/csv',
+        })
         .expect(400);
     });
 
@@ -286,7 +292,10 @@ describe('Bulk Upload Service — End-to-End', () => {
       const res = await request(app.getHttpServer())
         .post('/api/bulk-upload/upload')
         .set('Authorization', `Bearer ${token}`)
-        .attach('file', mixedCsv, { filename: 'mixed.csv', contentType: 'text/csv' })
+        .attach('file', mixedCsv, {
+          filename: 'mixed.csv',
+          contentType: 'text/csv',
+        })
         .expect(201);
 
       expect(res.body.recordsInserted).toBe(2);
@@ -319,7 +328,10 @@ describe('Bulk Upload Service — End-to-End', () => {
       await request(app.getHttpServer())
         .post('/api/bulk-upload/upload')
         .set('Authorization', `Bearer ${token}`)
-        .attach('file', csv, { filename: 'booleans.csv', contentType: 'text/csv' })
+        .attach('file', csv, {
+          filename: 'booleans.csv',
+          contentType: 'text/csv',
+        })
         .expect(201);
 
       const recordsRes = await request(app.getHttpServer())
@@ -380,7 +392,10 @@ describe('Bulk Upload Service — End-to-End', () => {
       await request(app.getHttpServer())
         .post('/api/bulk-upload/upload')
         .set('Authorization', `Bearer ${token}`)
-        .attach('file', validCsvBuffer, { filename: 'test.csv', contentType: 'text/csv' });
+        .attach('file', validCsvBuffer, {
+          filename: 'test.csv',
+          contentType: 'text/csv',
+        });
 
       // Then fetch
       const res = await request(app.getHttpServer())
@@ -398,7 +413,10 @@ describe('Bulk Upload Service — End-to-End', () => {
       await request(app.getHttpServer())
         .post('/api/bulk-upload/upload')
         .set('Authorization', `Bearer ${token}`)
-        .attach('file', Buffer.from('name\nAlice'), { filename: 'a.csv', contentType: 'text/csv' });
+        .attach('file', Buffer.from('name\nAlice'), {
+          filename: 'a.csv',
+          contentType: 'text/csv',
+        });
 
       const res = await request(app.getHttpServer())
         .get('/api/bulk-upload/records')
@@ -441,7 +459,10 @@ describe('Bulk Upload Service — End-to-End', () => {
       await request(app.getHttpServer())
         .post('/api/bulk-upload/upload')
         .set('Authorization', `Bearer ${token}`)
-        .attach('file', validCsvBuffer, { filename: 'test.csv', contentType: 'text/csv' });
+        .attach('file', validCsvBuffer, {
+          filename: 'test.csv',
+          contentType: 'text/csv',
+        });
 
       // Delete all
       await request(app.getHttpServer())
