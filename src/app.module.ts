@@ -7,6 +7,7 @@ import { join } from 'path';
 import { validationSchema } from './config/app.config';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
+import { BulkUploadModule } from './bulk-upload/bulk-upload.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { AuthModule } from './auth/auth.module';
 
     DatabaseModule,
     AuthModule,
+    BulkUploadModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
