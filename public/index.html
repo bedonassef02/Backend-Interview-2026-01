@@ -1,12 +1,844 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <title>Bulk Upload Service — Coming Soon</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nexus CSV Data Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Futuristic Dark Theme Color Palette */
+      --bg-base: #0a0a0f;
+      --bg-surface: rgba(20, 20, 30, 0.7);
+      --bg-surface-hover: rgba(30, 30, 45, 0.85);
+      --border-primary: rgba(100, 150, 255, 0.15);
+      --border-highlight: rgba(100, 150, 255, 0.4);
+
+      --brand-primary: #5c62ff;
+      --brand-glow: 0 0 25px rgba(92, 98, 255, 0.4);
+
+      --text-primary: #e6e6f0;
+      --text-secondary: #8c8fac;
+      --text-accent: #8e94ff;
+
+      --status-success: #1abc9c;
+      --status-error: #ff4757;
+      --status-warning: #ffa502;
+
+      --glass-blur: 16px;
+      --glass-border: 1px solid var(--border-primary);
+      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow-x: hidden;
+      background-image:
+        radial-gradient(circle at 15% 50%, rgba(92, 98, 255, 0.08), transparent 40%),
+        radial-gradient(circle at 85% 30%, rgba(26, 188, 156, 0.05), transparent 40%);
+    }
+
+    /* Glassmorphism utility */
+    .glass-panel {
+      background: var(--bg-surface);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      border: var(--glass-border);
+      border-radius: 24px;
+      box-shadow: var(--glass-shadow);
+      padding: 40px;
+      width: 100%;
+      max-width: 900px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      padding: 20px;
+      max-width: 1000px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-weight: 800;
+      font-size: 2.5rem;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #ffffff, var(--text-accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    p.subtitle {
+      color: var(--text-secondary);
+      font-weight: 300;
+      font-size: 1.1rem;
+    }
+
+    /* Views management */
+    .view {
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .view.active {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      opacity: 1;
+      animation: fadeIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Forms & Inputs */
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .input-group label {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+      padding: 14px 18px;
+      border-radius: 12px;
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+      border-color: var(--brand-primary);
+      box-shadow: 0 0 15px rgba(92, 98, 255, 0.2);
+      background: rgba(20, 20, 35, 0.6);
+    }
+
+    button {
+      background: var(--brand-primary);
+      color: white;
+      border: none;
+      padding: 16px 24px;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(92, 98, 255, 0.3);
+      font-family: 'Outfit', sans-serif;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--brand-glow);
+      background: #6b70ff;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button.outline {
+      background: transparent;
+      border: 1px solid var(--border-primary);
+      box-shadow: none;
+      color: var(--text-primary);
+    }
+
+    button.outline:hover {
+      border-color: var(--text-accent);
+      background: rgba(92, 98, 255, 0.1);
+    }
+
+    button.danger {
+      background: rgba(255, 71, 87, 0.1);
+      border: 1px solid rgba(255, 71, 87, 0.3);
+      color: var(--status-error);
+      box-shadow: none;
+    }
+
+    button.danger:hover {
+      background: var(--status-error);
+      color: white;
+      box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+    }
+
+    /* File Upload Zone */
+    .upload-zone {
+      border: 2px dashed var(--border-primary);
+      border-radius: 16px;
+      padding: 60px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: rgba(0, 0, 0, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .upload-zone:hover,
+    .upload-zone.dragover {
+      border-color: var(--brand-primary);
+      background: rgba(92, 98, 255, 0.05);
+    }
+
+    .upload-icon {
+      font-size: 3rem;
+      margin-bottom: 16px;
+      display: inline-block;
+      transition: transform 0.3s ease;
+    }
+
+    .upload-zone:hover .upload-icon {
+      transform: translateY(-5px);
+    }
+
+    .upload-text {
+      font-size: 1.2rem;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .upload-sub {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    /* Top Bar */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+      background: rgba(10, 10, 15, 0.8);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      margin-bottom: 10px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: rgba(26, 188, 156, 0.1);
+      color: var(--status-success);
+      border: 1px solid rgba(26, 188, 156, 0.2);
+    }
+
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--status-success);
+      box-shadow: 0 0 10px var(--status-success);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        opacity: 0.6;
+        transform: scale(0.9);
+      }
+
+      50% {
+        opacity: 1;
+        transform: scale(1.1);
+      }
+
+      100% {
+        opacity: 0.6;
+        transform: scale(0.9);
+      }
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+    }
+
+    /* Data Table */
+    .table-container {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid var(--border-primary);
+      background: rgba(0, 0, 0, 0.3);
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 16px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border-primary);
+    }
+
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      font-size: 0.95rem;
+    }
+
+    tbody tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-secondary);
+    }
+
+    /* Toasts */
+    .toast-container {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 1000;
+    }
+
+    .toast {
+      background: var(--bg-surface);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-primary);
+      padding: 16px 24px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transform: translateX(120%);
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .toast.show {
+      transform: translateX(0);
+    }
+
+    .toast.success {
+      border-left: 4px solid var(--status-success);
+    }
+
+    .toast.error {
+      border-left: 4px solid var(--status-error);
+    }
+
+    .toast.info {
+      border-left: 4px solid var(--brand-primary);
+    }
+
+    .loader {
+      display: none;
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .btn-text {
+      display: inline-block;
+    }
+
+    .loading .btn-text {
+      display: none;
+    }
+
+    .loading .loader {
+      display: inline-block;
+    }
+
+    .upload-results {
+      margin-top: 15px;
+      padding: 20px;
+      border-radius: 12px;
+      background: rgba(26, 188, 156, 0.05);
+      border: 1px solid rgba(26, 188, 156, 0.2);
+      display: none;
+    }
+
+    .upload-results h3 {
+      color: var(--status-success);
+      margin-bottom: 15px;
+      font-size: 1.2rem;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+    }
+
+    .stat-box {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Raw Data Pre */
+    pre {
+      background: rgba(0, 0, 0, 0.5);
+      padding: 10px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      max-height: 80px;
+      overflow-y: auto;
+      color: #a5d6ff;
+    }
+  </style>
 </head>
+
 <body>
-  <h1>Bulk Upload Service</h1>
-  <p>Interface will be added in Phase 6.</p>
-  <p>API docs: <a href="/api/docs">/api/docs</a></p>
+
+  <div class="toast-container" id="toast-container"></div>
+
+  <div class="container">
+    <!-- View 1: Login -->
+    <div id="login-view" class="view active glass-panel" style="max-width: 450px; margin: 0 auto;">
+      <header>
+        <h1>Nexus</h1>
+        <p class="subtitle">Secure Data Engine Authentication</p>
+      </header>
+
+      <form id="login-form">
+        <div class="input-group">
+          <label>Username</label>
+          <input type="text" id="username" placeholder="Enter admin user" required autocomplete="username">
+        </div>
+
+        <div class="input-group">
+          <label>Access Key</label>
+          <input type="password" id="password" placeholder="Enter secure key" required autocomplete="current-password">
+        </div>
+
+        <button type="submit" id="login-btn" style="width: 100%; margin-top: 10px;">
+          <span class="btn-text">Authenticate</span>
+          <span class="loader"></span>
+        </button>
+      </form>
+    </div>
+
+    <!-- View 2: Dashboard -->
+    <div id="dashboard-view" class="view glass-panel">
+      <div class="top-bar">
+        <div class="status-badge">
+          <div class="status-indicator"></div>
+          Connection Secured
+        </div>
+        <div class="controls">
+          <button class="outline" id="refresh-btn" style="padding: 10px 16px; font-size: 0.9rem;">Refresh Data</button>
+          <button class="outline" id="logout-btn" style="padding: 10px 16px; font-size: 0.9rem;">Logout</button>
+        </div>
+      </div>
+
+      <header style="text-align: left; margin-bottom: 0;">
+        <h1 style="font-size: 2rem;">Data Ingestion Center</h1>
+        <p class="subtitle">Upload high-volume CSV payloads directly to the database stream.</p>
+      </header>
+
+      <div class="upload-zone" id="drop-zone">
+        <div class="upload-icon">☁️</div>
+        <div class="upload-text" id="upload-txt-main">Drag & Drop CSV File Here</div>
+        <div class="upload-sub">or click to browse local files (Max 10MB)</div>
+        <input type="file" id="file-input" accept=".csv, text/csv">
+      </div>
+
+      <!-- Upload Results Panel -->
+      <div class="upload-results" id="upload-results">
+        <h3>✓ Processing Complete</h3>
+        <div class="stat-grid">
+          <div class="stat-box">
+            <div class="stat-value" id="res-inserted">0</div>
+            <div class="stat-label">Records Inserted</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value" id="res-failed" style="color: var(--status-warning);">0</div>
+            <div class="stat-label">Skipped / Failed</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value" id="res-time">0ms</div>
+            <div class="stat-label">Execution Time</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value" id="res-total">0</div>
+            <div class="stat-label">Total DB Size</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 20px;">
+        <h3 style="color: white; font-weight: 600;">System Repository (<span id="record-count">0</span>)</h3>
+        <button class="danger" id="reset-btn" style="padding: 8px 16px; font-size: 0.85rem;">⚠️ Purge Database</button>
+      </div>
+
+      <div class="table-container">
+        <table id="records-table">
+          <thead>
+            <tr>
+              <th style="width: 25%">ID / UUID</th>
+              <th style="width: 20%">Created At</th>
+              <th style="width: 15%">Status</th>
+              <th style="width: 40%">Parsed Data (Raw Map)</th>
+            </tr>
+          </thead>
+          <tbody id="records-body">
+            <tr>
+              <td colspan="4">
+                <div class="empty-state">No records present in the database simulation.</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // DOM Elements
+    const loginView = document.getElementById('login-view');
+    const dashboardView = document.getElementById('dashboard-view');
+    const loginForm = document.getElementById('login-form');
+    const loginBtn = document.getElementById('login-btn');
+    const logoutBtn = document.getElementById('logout-btn');
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const uploadTxtMain = document.getElementById('upload-txt-main');
+    const recordsBody = document.getElementById('records-body');
+    const recordCount = document.getElementById('record-count');
+    const refreshBtn = document.getElementById('refresh-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const toastContainer = document.getElementById('toast-container');
+    const uploadResults = document.getElementById('upload-results');
+
+    // State & API base
+    let jwtToken = sessionStorage.getItem('nexus_jwt') || null;
+    const API_URL = '/api';
+
+    // Initialization
+    if (jwtToken) {
+      switchView(dashboardView);
+      fetchRecords();
+    }
+
+    // View Transition logic
+    function switchView(targetView) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      setTimeout(() => {
+        targetView.classList.add('active');
+      }, 50);
+    }
+
+    // Toast Notification System
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+
+      const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+
+      toast.innerHTML = `
+                <div style="font-weight: bold; font-size: 1.1rem; border-radius: 50%; background: rgba(255,255,255,0.1); width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">${icon}</div>
+                <div>${message}</div>
+            `;
+
+      toastContainer.appendChild(toast);
+
+      // Trigger reflow for animation
+      setTimeout(() => toast.classList.add('show'), 10);
+
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 400);
+      }, 3500);
+    }
+
+    // --- AUTHENTICATION ---
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      loginBtn.classList.add('loading');
+
+      try {
+        const res = await fetch(`${API_URL}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          jwtToken = data.access_token;
+          sessionStorage.setItem('nexus_jwt', jwtToken);
+          showToast('Authentication Successful', 'success');
+          switchView(dashboardView);
+          fetchRecords();
+        } else {
+          showToast(data.message || 'Invalid credentials', 'error');
+        }
+      } catch (err) {
+        showToast('Connection failed. Server might be offline.', 'error');
+      } finally {
+        loginBtn.classList.remove('loading');
+      }
+    });
+
+    logoutBtn.addEventListener('click', () => {
+      jwtToken = null;
+      sessionStorage.removeItem('nexus_jwt');
+      switchView(loginView);
+    });
+
+    // --- UPLOAD SYSTEM ---
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+      uploadTxtMain.textContent = "Drop file to initiate processing";
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('dragover');
+      uploadTxtMain.textContent = "Drag & Drop CSV File Here";
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+
+      if (e.dataTransfer.files.length) {
+        handleFileUpload(e.dataTransfer.files[0]);
+      }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length) {
+        handleFileUpload(e.target.files[0]);
+      }
+    });
+
+    async function handleFileUpload(file) {
+      if (!file) return;
+
+      // Reset UI
+      uploadResults.style.display = 'none';
+      uploadTxtMain.innerHTML = `<span class="loader" style="display:inline-block; border-color:var(--brand-primary); border-top-color:transparent; margin-right: 10px;"></span> Processing stream...`;
+      dropZone.style.pointerEvents = 'none';
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const res = await fetch(`${API_URL}/bulk-upload/upload`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${jwtToken}` },
+          body: formData
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          showToast(`Uploaded ${data.recordsInserted} records successfully`, 'success');
+
+          // Display stats panel
+          document.getElementById('res-inserted').textContent = data.recordsInserted;
+          document.getElementById('res-failed').textContent = data.recordsFailed;
+          document.getElementById('res-time').textContent = data.processingTime;
+          document.getElementById('res-total').textContent = data.totalRecordsInDb;
+
+          uploadResults.style.display = 'block';
+          fetchRecords(); // Refresh table
+        } else {
+          if (res.status === 401) {
+            showToast('Session expired. Please login again.', 'warning');
+            logoutBtn.click();
+          } else if (res.status === 429) {
+            showToast('Rate limit exceeded. Wait 60s.', 'error');
+          } else {
+            showToast(data.message || 'Upload failed', 'error');
+          }
+        }
+      } catch (err) {
+        showToast('Network error during file upload', 'error');
+      } finally {
+        fileInput.value = '';
+        uploadTxtMain.textContent = "Drag & Drop CSV File Here";
+        dropZone.style.pointerEvents = 'all';
+      }
+    }
+
+    // --- RECORDS MANAGEMENT ---
+    async function fetchRecords() {
+      try {
+        const res = await fetch(`${API_URL}/bulk-upload/records`, {
+          headers: { 'Authorization': `Bearer ${jwtToken}` }
+        });
+
+        if (!res.ok) {
+          if (res.status === 401) logoutBtn.click();
+          return;
+        }
+
+        const data = await res.json();
+        renderTable(data.records);
+      } catch (err) {
+        showToast('Failed to fetch records repository', 'error');
+      }
+    }
+
+    function renderTable(records) {
+      recordCount.textContent = records.length;
+
+      if (records.length === 0) {
+        recordsBody.innerHTML = `<tr><td colspan="4"><div class="empty-state">No records present in the database simulation.</div></td></tr>`;
+        return;
+      }
+
+      // Optional pagination constraint for UI performance
+      const displayLimit = 100;
+      const recordsToDisplay = records.slice(-displayLimit).reverse(); // Show newest 100 max globally
+
+      let html = '';
+      recordsToDisplay.forEach(rec => {
+        const date = new Date(rec.createdAt).toLocaleString();
+        const statusColor = rec.status === 'processed' ? 'var(--status-success)' : 'var(--text-secondary)';
+
+        html += `
+                    <tr>
+                        <td style="font-family: monospace; font-size: 0.85rem; color: var(--text-accent);">${rec.id}</td>
+                        <td>${date}</td>
+                        <td><span style="color: ${statusColor};">${rec.status}</span></td>
+                        <td><pre>${JSON.stringify(rec.data, null, 2)}</pre></td>
+                    </tr>
+                `;
+      });
+
+      if (records.length > displayLimit) {
+        html += `<tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">Showing latest ${displayLimit} of ${records.length} records...</td></tr>`;
+      }
+
+      recordsBody.innerHTML = html;
+    }
+
+    refreshBtn.addEventListener('click', () => {
+      fetchRecords();
+      showToast('Repository synchronised', 'info');
+    });
+
+    resetBtn.addEventListener('click', async () => {
+      if (!confirm('Are you absolutely sure you want to purge the database? This action is irreversible.')) return;
+
+      try {
+        const res = await fetch(`${API_URL}/bulk-upload/records`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${jwtToken}` }
+        });
+
+        if (res.ok) {
+          showToast('Database purged permanently', 'success');
+          uploadResults.style.display = 'none';
+          fetchRecords();
+        } else {
+          showToast('Failed to purge database', 'error');
+        }
+      } catch (err) {
+        showToast('Network fault during purge attempt', 'error');
+      }
+    });
+  </script>
 </body>
+
 </html>

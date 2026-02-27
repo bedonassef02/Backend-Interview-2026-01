@@ -24,7 +24,7 @@ import { BulkUploadModule } from './bulk-upload/bulk-upload.module';
     ]),
 
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public'),
+      rootPath: join(process.cwd(), 'public'),
     }),
 
     DatabaseModule,
