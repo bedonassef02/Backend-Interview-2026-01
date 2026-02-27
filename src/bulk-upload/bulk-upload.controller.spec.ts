@@ -27,11 +27,9 @@ describe('BulkUploadController', () => {
           useValue: {
             processCSV: jest.fn().mockResolvedValue(mockUploadResponse),
             getRecords: jest.fn().mockResolvedValue([]),
-            resetDatabase: jest
-              .fn()
-              .mockResolvedValue({
-                message: 'Database has been reset successfully',
-              }),
+            resetDatabase: jest.fn().mockResolvedValue({
+              message: 'Database has been reset successfully',
+            }),
           },
         },
       ],

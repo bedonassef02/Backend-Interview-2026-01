@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
@@ -25,11 +26,6 @@ async function bootstrap() {
       contentSecurityPolicy: false, // Disable CSP for Swagger UI
     }),
   );
-  app.enableCors({
-    origin: process.env.CORS_ORIGIN || '*',
-    methods: ['GET', 'POST', 'DELETE'],
-    credentials: true,
-  });
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Bulk Upload Service')
@@ -49,7 +45,16 @@ async function bootstrap() {
     swaggerOptions: { persistAuthorization: true },
   });
 
-  const port = process.env.PORT ?? 3000;
+  const configService = app.get<ConfigService>(ConfigService);
+  const port = configService.get<number>('PORT') || 3000;
+  const corsOrigin = configService.get<string>('CORS_ORIGIN') || '*';
+
+  app.enableCors({
+    origin: corsOrigin,
+    methods: ['GET', 'POST', 'DELETE'],
+    credentials: true,
+  });
+
   await app.listen(port);
 
   logger.log(`Server:  http://localhost:${port}`);
