@@ -3,13 +3,12 @@ import {
   Post,
   Get,
   Delete,
+  Query,
   UseGuards,
   UseInterceptors,
   UploadedFile,
   HttpCode,
   HttpStatus,
-  ParseFilePipe,
-  MaxFileSizeValidator,
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -21,14 +20,20 @@ import {
   ApiConsumes,
   ApiBody,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtOrApiKeyGuard } from '../auth/guards/jwt-or-apikey.guard';
 import { BulkUploadService } from './bulk-upload.service';
 import { UploadResponseDto } from './dto/upload-response.dto';
+import { PaginationQueryDto, PaginatedResponseDto } from './dto/pagination.dto';
 import { createParseFilePipe } from '../common/files/files-validation-factory';
+import { FileSizeType, FileType } from '../common/files/types/file.types';
+import { NonEmptyArray } from '../common/files/utils/array.util';
+
+const MAX_UPLOAD_SIZE: FileSizeType = '10MB';
+const ALLOWED_FILE_TYPES: NonEmptyArray<FileType> = ['csv'];
 
 @ApiTags('Bulk Upload')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@ApiBearerAuth('JWT')
+@UseGuards(JwtOrApiKeyGuard)
 @Controller('api/bulk-upload')
 export class BulkUploadController {
   constructor(private readonly bulkUploadService: BulkUploadService) {}
@@ -60,7 +65,7 @@ export class BulkUploadController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 429, description: 'Rate limit exceeded' })
   async uploadCSV(
-    @UploadedFile(createParseFilePipe('10MB', ['csv']))
+    @UploadedFile(createParseFilePipe(MAX_UPLOAD_SIZE, ALLOWED_FILE_TYPES))
     file: Express.Multer.File,
   ): Promise<UploadResponseDto> {
     if (!file) {
@@ -70,15 +75,30 @@ export class BulkUploadController {
   }
 
   @Get('records')
-  @ApiOperation({ summary: 'Get all processed upload records' })
+  @ApiOperation({ summary: 'Get processed upload records (paginated)' })
   @ApiResponse({
     status: 200,
-    description: 'Returns all records from the simulated database',
+    description: 'Returns paginated records from the simulated database',
+    type: PaginatedResponseDto,
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getRecords() {
-    const records = await this.bulkUploadService.getRecords();
-    return { success: true, count: records.length, records };
+  async getRecords(
+    @Query() query: PaginationQueryDto,
+  ): Promise<PaginatedResponseDto> {
+    const allRecords = await this.bulkUploadService.getRecords();
+    const total = allRecords.length;
+    const { page, limit } = query;
+    const start = (page - 1) * limit;
+    const records = allRecords.slice(start, start + limit);
+
+    return {
+      success: true,
+      count: records.length,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+      records,
+    };
   }
 
   @Delete('records')

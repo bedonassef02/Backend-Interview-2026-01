@@ -8,6 +8,7 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import {
   ApiTags,
   ApiOperation,
@@ -16,6 +17,7 @@ import {
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { UserProfileDto } from './dto/user-profile.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @ApiTags('Authentication')
@@ -25,6 +27,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @ApiOperation({ summary: 'Login to obtain JWT access token' })
   @ApiResponse({ status: 200, description: 'Returns a JWT access token' })
   @ApiResponse({ status: 401, description: 'Invalid credentials provided' })
@@ -34,11 +37,15 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT')
   @ApiOperation({ summary: 'Get current logged-in user info (JWT test)' })
-  @ApiResponse({ status: 200, description: 'Returns token payload' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns token payload',
+    type: UserProfileDto,
+  })
   @ApiResponse({ status: 401, description: 'Invalid or missing JWT' })
-  getProfile(@Request() req: any) {
+  getProfile(@Request() req: any): UserProfileDto {
     return req.user;
   }
 }

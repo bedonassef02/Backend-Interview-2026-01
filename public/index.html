@@ -465,6 +465,59 @@
       letter-spacing: 1px;
     }
 
+    /* Pagination Controls */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 14px;
+      gap: 12px;
+    }
+
+    .pagination-info {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .pagination-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .pagination-controls button {
+      padding: 7px 16px;
+      font-size: 0.85rem;
+      border-radius: 8px;
+      box-shadow: none;
+    }
+
+    .pagination-controls button:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .page-indicator {
+      font-size: 0.85rem;
+      color: var(--text-accent);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* select for page size */
+    .page-size-select {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-primary);
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-family: 'Outfit', sans-serif;
+      outline: none;
+      cursor: pointer;
+    }
+
     /* Raw Data Pre */
     pre {
       background: rgba(0, 0, 0, 0.5);
@@ -581,6 +634,23 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Pagination Controls -->
+      <div class="pagination" id="pagination-bar" style="display:none;">
+        <div class="pagination-info" id="pagination-info"></div>
+        <div class="pagination-controls">
+          <select class="page-size-select" id="page-size-select" title="Records per page">
+            <option value="25">25 / page</option>
+            <option value="50">50 / page</option>
+            <option value="100" selected>100 / page</option>
+            <option value="250">250 / page</option>
+            <option value="500">500 / page</option>
+          </select>
+          <button class="outline" id="prev-btn" style="padding: 7px 16px; font-size: 0.85rem;" disabled>← Prev</button>
+          <span class="page-indicator" id="page-indicator">Page 1</span>
+          <button class="outline" id="next-btn" style="padding: 7px 16px; font-size: 0.85rem;">Next →</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -605,10 +675,10 @@
     let jwtToken = sessionStorage.getItem('nexus_jwt') || null;
     const API_URL = '/api';
 
-    // Initialization
+    // Initialization — called AFTER all let/const declarations below to avoid temporal dead zone
     if (jwtToken) {
       switchView(dashboardView);
-      fetchRecords();
+      // fetchRecords() is called at the end of the script after all state is initialized
     }
 
     // View Transition logic
@@ -760,10 +830,22 @@
       }
     }
 
+    // --- Pagination State ---
+    let currentPage = 1;
+    let currentLimit = 100;
+    let totalRecordsGlobal = 0;
+
+    const paginationBar = document.getElementById('pagination-bar');
+    const paginationInfo = document.getElementById('pagination-info');
+    const pageIndicator = document.getElementById('page-indicator');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const pageSizeSelect = document.getElementById('page-size-select');
+
     // --- RECORDS MANAGEMENT ---
-    async function fetchRecords() {
+    async function fetchRecords(page = currentPage, limit = currentLimit) {
       try {
-        const res = await fetch(`${API_URL}/bulk-upload/records`, {
+        const res = await fetch(`${API_URL}/bulk-upload/records?page=${page}&limit=${limit}`, {
           headers: { 'Authorization': `Bearer ${jwtToken}` }
         });
 
@@ -773,26 +855,27 @@
         }
 
         const data = await res.json();
-        renderTable(data.records);
+        currentPage = data.page;
+        totalRecordsGlobal = data.total;
+        currentLimit = limit;
+        renderTable(data.records, data.total, data.page, data.totalPages);
       } catch (err) {
         showToast('Failed to fetch records repository', 'error');
       }
     }
 
-    function renderTable(records) {
-      recordCount.textContent = records.length;
+    function renderTable(records, total, page, totalPages) {
+      // Header count shows TOTAL records in DB, not just this page
+      recordCount.textContent = total.toLocaleString();
 
-      if (records.length === 0) {
+      if (total === 0) {
         recordsBody.innerHTML = `<tr><td colspan="4"><div class="empty-state">No records present in the database simulation.</div></td></tr>`;
+        paginationBar.style.display = 'none';
         return;
       }
 
-      // Optional pagination constraint for UI performance
-      const displayLimit = 100;
-      const recordsToDisplay = records.slice(-displayLimit).reverse(); // Show newest 100 max globally
-
       let html = '';
-      recordsToDisplay.forEach(rec => {
+      records.forEach(rec => {
         const date = new Date(rec.createdAt).toLocaleString();
         const statusColor = rec.status === 'processed' ? 'var(--status-success)' : 'var(--text-secondary)';
 
@@ -806,15 +889,34 @@
                 `;
       });
 
-      if (records.length > displayLimit) {
-        html += `<tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">Showing latest ${displayLimit} of ${records.length} records...</td></tr>`;
-      }
-
       recordsBody.innerHTML = html;
+
+      // Update pagination bar
+      const start = (page - 1) * currentLimit + 1;
+      const end = Math.min(page * currentLimit, total);
+      paginationInfo.textContent = `Showing ${start.toLocaleString()}–${end.toLocaleString()} of ${total.toLocaleString()} records`;
+      pageIndicator.textContent = `Page ${page} / ${totalPages}`;
+      prevBtn.disabled = page <= 1;
+      nextBtn.disabled = page >= totalPages;
+      paginationBar.style.display = totalPages <= 1 ? 'none' : 'flex';
     }
 
+    prevBtn.addEventListener('click', () => {
+      if (currentPage > 1) fetchRecords(currentPage - 1);
+    });
+
+    nextBtn.addEventListener('click', () => {
+      fetchRecords(currentPage + 1);
+    });
+
+    pageSizeSelect.addEventListener('change', () => {
+      currentLimit = parseInt(pageSizeSelect.value, 10);
+      currentPage = 1; // Reset to first page when changing page size
+      fetchRecords(1, currentLimit);
+    });
+
     refreshBtn.addEventListener('click', () => {
-      fetchRecords();
+      fetchRecords(currentPage);
       showToast('Repository synchronised', 'info');
     });
 
@@ -838,6 +940,13 @@
         showToast('Network fault during purge attempt', 'error');
       }
     });
+
+    // --- INITIAL LOAD ---
+    // Must be called here (after all let/const declarations) to avoid the
+    // temporal dead zone on currentPage/currentLimit/etc.
+    if (jwtToken) {
+      fetchRecords();
+    }
   </script>
 </body>
 
