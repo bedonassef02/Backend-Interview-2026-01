@@ -27,7 +27,10 @@ async function bootstrap() {
       'CSV bulk-upload API with JWT & API-key authentication and rate-limiting.',
     )
     .setVersion('1.0.0')
-    .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'JWT')
+    .addBearerAuth(
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      'JWT',
+    )
     .addApiKey({ type: 'apiKey', name: 'x-api-key', in: 'header' }, 'ApiKey')
     .build();
 
