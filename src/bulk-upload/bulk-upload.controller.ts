@@ -24,6 +24,7 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { BulkUploadService } from './bulk-upload.service';
 import { UploadResponseDto } from './dto/upload-response.dto';
+import { createParseFilePipe } from '../common/files/files-validation-factory';
 
 @ApiTags('Bulk Upload')
 @ApiBearerAuth()
@@ -59,15 +60,7 @@ export class BulkUploadController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 429, description: 'Rate limit exceeded' })
   async uploadCSV(
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB max limit
-        ],
-        exceptionFactory: (error) =>
-          new BadRequestException(`File validation failed: ${error}`),
-      }),
-    )
+    @UploadedFile(createParseFilePipe('10MB', ['csv']))
     file: Express.Multer.File,
   ): Promise<UploadResponseDto> {
     if (!file) {

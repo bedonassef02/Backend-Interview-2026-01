@@ -19,14 +19,6 @@ export class BulkUploadService {
   ): Promise<UploadResponseDto> {
     const startTime = Date.now();
 
-    if (!filename.toLowerCase().endsWith('.csv')) {
-      throw new BadRequestException('Only CSV files are accepted');
-    }
-
-    if (fileBuffer.length === 0) {
-      throw new BadRequestException('Uploaded file is empty');
-    }
-
     this.logger.log(
       `Processing CSV file: ${filename} (${fileBuffer.length} bytes)`,
     );
