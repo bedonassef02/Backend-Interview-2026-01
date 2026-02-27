@@ -6,6 +6,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { join } from 'path';
 import { validationSchema } from './config/app.config';
 import { DatabaseModule } from './database/database.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { DatabaseModule } from './database/database.module';
     }),
 
     DatabaseModule,
+    AuthModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
